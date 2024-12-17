@@ -1,0 +1,193 @@
+Playbook to Collect and Add Host Keys to Known Hosts File
+
+
+---
+
+Overview:
+
+This Ansible playbook automates the process of collecting SSH host keys for all target hosts in the inventory and adding them to a specified known_hosts file on the control node. It ensures secure and trusted SSH communication between the control node and managed hosts.
+
+
+---
+
+Playbook Description:
+
+Playbook Name: collect-host-keys.yml
+
+This playbook:
+
+1. Uses ssh-keyscan to collect the SSH RSA host key of each host in the inventory.
+
+
+2. Registers the collected keys.
+
+
+3. Appends the keys to the specified known_hosts file on the Ansible control node.
+
+
+
+
+---
+
+Playbook Content:
+
+Main Structure:
+
+---
+- hosts: all
+  gather_facts: no
+
+  tasks:
+    - name: Collect host keys
+      ansible.builtin.known_hosts:
+        name: "{{ inventory_hostname }}"
+        state: present
+        key: "{{ lookup('pipe', 'ssh-keyscan -t rsa ' + inventory_hostname) }}"
+      register: known_hosts_entry
+
+    - name: Add host keys to known hosts file
+      ansible.builtin.lineinfile:
+        path: "/path/to/known_hosts"
+        line: "{{ known_hosts_entry.key }}"
+      delegate_to: localhost
+
+
+---
+
+Tasks Breakdown:
+
+1. Collect Host Keys:
+
+Uses the ssh-keyscan command to retrieve the RSA host key for each host in the inventory.
+
+The output is stored in the known_hosts_entry variable.
+
+
+- name: Collect host keys
+  ansible.builtin.known_hosts:
+    name: "{{ inventory_hostname }}"
+    state: present
+    key: "{{ lookup('pipe', 'ssh-keyscan -t rsa ' + inventory_hostname) }}"
+  register: known_hosts_entry
+
+
+2. Add Host Keys to Known Hosts File:
+
+Appends the retrieved SSH host key to the specified known_hosts file on the control node.
+
+Uses the lineinfile module to ensure the line is added.
+
+The task runs locally on the control node using delegate_to: localhost.
+
+
+- name: Add host keys to known hosts file
+  ansible.builtin.lineinfile:
+    path: "/path/to/known_hosts"
+    line: "{{ known_hosts_entry.key }}"
+  delegate_to: localhost
+
+
+
+
+---
+
+Variables:
+
+
+---
+
+Execution Steps:
+
+1. Update the Playbook Path:
+
+Replace /path/to/known_hosts with the full path of the known_hosts file on the control node, typically ~/.ssh/known_hosts.
+
+
+
+2. Run the Playbook:
+
+Execute the playbook using the following command:
+
+ansible-playbook -i inventory_file collect-host-keys.yml
+
+
+
+3. Verify:
+
+Check the known_hosts file to confirm the host keys are added:
+
+cat /path/to/known_hosts
+
+
+
+
+
+---
+
+Notes:
+
+1. SSH-Keyscan:
+
+The ssh-keyscan command retrieves the public SSH key for a remote host. Ensure SSH access is available to all hosts in the inventory.
+
+
+
+2. Key Type:
+
+This playbook collects only RSA keys. Modify the -t rsa option in the ssh-keyscan command to retrieve other key types (e.g., ecdsa, ed25519).
+
+
+
+3. Permissions:
+
+Ensure the control node has write permissions to the specified known_hosts file.
+
+
+
+4. Delegate to Localhost:
+
+The lineinfile task runs on the control node (localhost) to modify the known_hosts file locally.
+
+
+
+
+
+---
+
+Troubleshooting:
+
+Empty Key Output:
+
+Ensure the host is reachable and SSH is enabled:
+
+ping <host>
+ssh-keyscan <host>
+
+
+Permission Denied:
+
+Verify permissions to write to the known_hosts file.
+
+
+Duplicate Entries:
+
+The lineinfile module ensures no duplicate lines are added.
+
+
+
+
+---
+
+Example:
+
+To run this playbook with an inventory file hosts.ini, execute:
+
+ansible-playbook -i hosts.ini collect-host-keys.yml
+
+
+---
+
+Conclusion:
+
+This playbook simplifies the process of securely collecting and appending SSH host keys to a known_hosts file, ensuring smooth and trusted SSH connections between the control node and managed hosts.
+
