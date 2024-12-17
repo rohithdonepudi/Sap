@@ -1,0 +1,192 @@
+README: NFSv4 Share Mounting Playbook for SAP Setup
+
+
+---
+
+Overview:
+
+This Ansible playbook automates the creation of a mount directory and mounting an NFSv4 share on all target hosts. It is designed for SAP environments, specifically ensuring that the NFS share is configured with performance-optimized options.
+
+
+---
+
+Playbook Description:
+
+Playbook Name: mount-nfs.yml
+
+This playbook:
+
+1. Creates a mount directory on the target system.
+
+
+2. Mounts an NFSv4 share using optimized options.
+
+
+3. Ensures flexibility to integrate with Linux Pacemaker Clusters if required in the future.
+
+
+
+
+---
+
+Playbook Content:
+
+Main Structure:
+
+---
+- name: Mount NFSv4 Share
+  hosts: all
+  become: yes
+
+  tasks:
+    - name: Create mount directory
+      file:
+        path: /software
+        state: directory
+        mode: '0755'
+
+    - name: Mount NFSv4 share
+      ansible.builtin.mount:
+        src: "{{ nfs_server }}:{{ nfs_path }}"
+        path: /software
+        fstype: nfs4
+        opts: nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2,noresvport,acl
+        state: mounted
+      register: nfs_mount_result
+      vars:
+        nfs_server: "fs-0e188969f5449169d.efs.us-east-1.amazonaws.com"
+        nfs_path: "/"
+
+
+---
+
+Tasks Breakdown:
+
+1. Create Mount Directory:
+
+This task ensures the /software directory exists as the mount point for the NFS share.
+
+Permissions: 755 (owner has full access, group and others have read/execute access).
+
+
+- name: Create mount directory
+  file:
+    path: /software
+    state: directory
+    mode: '0755'
+
+
+2. Mount NFSv4 Share:
+
+Mounts the NFS share at /software using performance-optimized NFSv4 options.
+
+Options include:
+
+nfsvers=4.1: Use NFS protocol version 4.1.
+
+rsize and wsize: Maximum read/write size to optimize throughput.
+
+hard: Ensures reliable operation when NFS server issues occur.
+
+timeo=600: Timeout value for NFS operations.
+
+retrans=2: Retransmission attempts for NFS requests.
+
+noresvport: Reduces port conflicts.
+
+acl: Ensures access control lists are honored.
+
+
+Future Scope:
+
+The noauto option can be conditionally appended when the host is managed by Pacemaker to prevent automatic mounting during boot.
+
+
+
+- name: Mount NFSv4 share
+  ansible.builtin.mount:
+    src: "{{ nfs_server }}:{{ nfs_path }}"
+    path: /software
+    fstype: nfs4
+    opts: nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2,noresvport,acl
+    state: mounted
+
+
+
+
+---
+
+Variables:
+
+
+---
+
+Notes:
+
+1. Linux Pacemaker Cluster:
+
+When using Pacemaker to manage high availability, the noauto option is necessary to avoid automatic mounting at boot.
+
+Adding noauto at this stage could cause issues during SAP preconfiguration (e.g., sapconf, saptune, or Ansible roles like sap_*preconfigure).
+
+It is recommended to append noauto after the SAP preconfiguration steps, during the sap_ha_pacemaker_cluster role execution.
+
+
+
+2. Performance Tuning:
+
+The NFS options are chosen to maximize throughput and reliability. These values can be adjusted based on network performance and requirements.
+
+
+
+3. Post-Reboot Behavior:
+
+Since the state: mounted ensures the mount is persistent in /etc/fstab, the NFS share will be automatically remounted after reboot unless explicitly overridden with the noauto option.
+
+
+
+
+
+---
+
+Prerequisites:
+
+1. NFS Server: Ensure the NFS server is up and running, and the share is properly exported.
+
+
+2. Ansible Control Node: Ansible must be installed on the control node.
+
+
+3. Target Hosts: Must have network connectivity to the NFS server.
+
+
+
+
+---
+
+Execution:
+
+To run the playbook, execute the following command:
+
+ansible-playbook -i inventory_file mount-nfs.yml
+
+
+---
+
+Troubleshooting:
+
+NFS Share Not Mounting: Verify connectivity to the NFS server using:
+
+ping <nfs_server>
+showmount -e <nfs_server>
+
+Permission Denied: Ensure NFS exports on the server allow access from the target hosts.
+
+
+
+---
+
+Conclusion:
+
+This playbook automates NFS mounting for SAP environments, ensuring optimal performance while offering flexibility for Pacemaker-managed clusters. The clear separation of tasks and adjustable variables make it easy to integrate into larger automation workflows.
+
