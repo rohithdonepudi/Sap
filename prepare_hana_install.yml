@@ -1,0 +1,102 @@
+Documentation for Ansible Playbook with Imported Sub-Playbooks
+
+
+---
+
+Overview:
+
+This Ansible playbook orchestrates multiple pre-defined playbooks to perform the setup of disks, NFS mounts, and SAP HANA preconfiguration. The code utilizes ansible.builtin.import_playbook to include and execute other playbooks sequentially.
+
+
+---
+
+Playbook Structure
+
+1. Main Playbook Header:
+
+- hosts: all
+  tasks:
+    - ansible.builtin.debug:
+        msg: play1
+
+hosts: Specifies that the play runs on all hosts in the Ansible inventory.
+
+tasks: A simple debug task to confirm the execution of the main playbook.
+
+
+
+---
+
+2. Importing Sub-Playbooks:
+
+The following sub-playbooks are imported and executed sequentially using ansible.builtin.import_playbook.
+
+a. Set-Up Disks:
+
+- name: Include a play for set-up disks
+  ansible.builtin.import_playbook: sap-disk.yml
+
+Purpose:
+Imports and runs the sap-disk.yml playbook, which is responsible for setting up disks for SAP systems.
+
+Tasks in sap-disk.yml likely include disk partitioning, formatting, mounting, and configuring file systems.
+
+
+
+b. Set-Up NFS:
+
+- name: Include a play for set-up nfs
+  ansible.builtin.import_playbook: nfs-mount.yml
+
+Purpose:
+Imports and runs the nfs-mount.yml playbook, which sets up Network File System (NFS) mounts.
+
+Tasks in nfs-mount.yml likely include mounting shared NFS directories and ensuring persistent configurations.
+
+
+
+c. SAP HANA Preconfiguration:
+
+- name: Include a play for hana-preconfigure playbook
+  ansible.builtin.import_playbook: sap-hana-preconfigure.Yml
+
+Purpose:
+Imports and runs the sap-hana-preconfigure.Yml playbook, which prepares the system for SAP HANA installation.
+
+Tasks in sap-hana-preconfigure.Yml include updating system settings, applying kernel parameters, and ensuring prerequisites for SAP HANA are met.
+
+
+
+
+---
+
+Execution Flow:
+
+The playbook runs in the following sequence:
+
+1. Debug Message:
+Outputs a simple debug message (play1) to confirm the start of the playbook.
+
+
+2. Disk Setup:
+Executes the sap-disk.yml playbook to configure disks for SAP.
+
+
+3. NFS Mount Setup:
+Executes the nfs-mount.yml playbook to set up NFS mounts.
+
+
+4. SAP HANA Preconfiguration:
+Executes the sap-hana-preconfigure.Yml playbook to prepare the system for SAP HANA deployment.
+
+
+
+
+---
+
+Prerequisites:
+
+1. **Ansible Control Node
+
+
+
