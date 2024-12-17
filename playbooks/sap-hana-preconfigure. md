@@ -1,0 +1,180 @@
+Documentation for Ansible Playbook: SAP HANA Preconfiguration
+
+Overview:
+ 
+This Ansible playbook automates the preconfiguration tasks required to prepare all target hosts in the Ansible inventory for SAP HANA installation. It ensures that the systems meet the necessary prerequisites and configurations for SAP HANA deployment.
+
+
+---
+
+Playbook Structure
+
+1. Play Header:
+
+- name: Ansible Play for executing preconfiguration activities for SAP HANA to all hosts in Ansible Inventory
+  hosts: all
+  become: true
+
+name: Descriptive title indicating that the playbook handles preconfiguration activities for SAP HANA.
+
+hosts: Specifies that tasks should run on all hosts listed in the Ansible inventory.
+
+become: Ensures tasks are executed with elevated privileges (sudo).
+
+
+
+---
+
+2. Variables Section:
+
+vars:
+  sap_general_preconfigure_fail_if_reboot_required: no
+  sap_hana_preconfigure_fail_if_reboot_required: no
+  sap_hana_preconfigure_update: yes
+  # sap_netweaver_preconfigure_fail_if_not_enough_swap_space_configured: no
+
+sap_general_preconfigure_fail_if_reboot_required:
+
+Prevents failure if a system reboot is required after general preconfiguration tasks.
+
+Value: no (do not fail the playbook execution).
+
+
+sap_hana_preconfigure_fail_if_reboot_required:
+
+Prevents failure if a system reboot is required after HANA preconfiguration tasks.
+
+Value: no (allows the playbook to continue execution).
+
+
+sap_hana_preconfigure_update:
+
+Ensures that all HANA-specific preconfiguration updates are applied.
+
+Value: yes (updates are applied).
+
+
+sap_netweaver_preconfigure_fail_if_not_enough_swap_space_configured (commented out):
+
+This optional variable, if enabled, would ensure sufficient swap space is configured for NetWeaver installations.
+
+
+
+
+---
+
+3. Roles Section:
+
+roles:
+  - { role: /home/ubuntu/ansible/roles-community-sap_install/roles/sap_general_preconfigure }
+  - { role: /home/ubuntu/ansible/roles-community-sap_install/roles/sap_hana_preconfigure }
+  # - { role: community.sap_install.sap_netweaver_preconfigure }
+
+sap_general_preconfigure:
+
+This role performs general system preconfiguration tasks for SAP environments.
+
+Tasks include kernel settings, package installation, and tuning system parameters for SAP.
+
+
+sap_hana_preconfigure:
+
+This role applies SAP HANA-specific preconfiguration tasks.
+
+Tasks include:
+
+Adjusting system performance settings.
+
+Ensuring required kernel parameters are set.
+
+Preparing the system to meet HANA installation prerequisites.
+
+
+
+sap_netweaver_preconfigure (commented out):
+
+This role (optional) prepares the system for SAP NetWeaver installations, focusing on swap space and additional NetWeaver-specific configurations.
+
+
+
+
+---
+
+Execution Workflow:
+
+1. General System Preconfiguration:
+
+The sap_general_preconfigure role prepares the target hosts with general system settings.
+
+If a reboot is required, the playbook does not fail (fail_if_reboot_required: no).
+
+
+
+2. HANA Preconfiguration:
+
+The sap_hana_preconfigure role ensures the target system is ready for SAP HANA installation by applying updates and tuning performance parameters.
+
+The playbook continues execution even if a reboot is needed (fail_if_reboot_required: no).
+
+
+
+3. Optional Role for NetWeaver:
+
+The sap_netweaver_preconfigure role can be enabled for preparing systems for NetWeaver installations, ensuring swap space and specific requirements are met.
+
+
+
+
+
+---
+
+How to Run the Playbook:
+
+1. Ensure that the Ansible inventory file is prepared with all target hosts.
+
+
+2. Verify that the required roles are installed on the Ansible control node under the correct path.
+
+
+3. Execute the playbook using the ansible-playbook command:
+
+ansible-playbook -i inventory_file sap_hana_preconfigure.yml
+
+
+
+
+---
+
+Prerequisites:
+
+Ansible Control Node: Ensure Ansible is installed and configured.
+
+Roles: The following roles must be present in the specified path:
+
+sap_general_preconfigure
+
+sap_hana_preconfigure
+
+(Optional) sap_netweaver_preconfigure
+
+
+Sudo Access: Required for elevated tasks.
+
+
+
+---
+
+Notes:
+
+This playbook ensures preconfiguration tasks complete without halting execution for reboots.
+
+Commented sections can be enabled for NetWeaver-specific setups if needed.
+
+Logs and outputs can be verified in the Ansible execution log for troubleshooting.
+
+
+
+---
+
+This document provides a detailed explanation of the playbook’s purpose, variable usage, roles, and execution process, ensuring clarity for users and maintainers.
+
