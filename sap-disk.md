@@ -1,5 +1,4 @@
 ---
-
 Documentation for sap-disk.yml Ansible Playbook: Complete Infrastructure Setup
 
 Overview:
@@ -105,8 +104,6 @@ tasks:
 name: This task executes the sap_storage_setup Ansible role, which is responsible for configuring the SAP storage as defined in the sap_storage_setup_definition variable.
 
 include_role: This module is used to include the sap_storage_setup role located at the specified path. The role is responsible for carrying out the tasks such as partitioning and formatting the disks, creating the necessary mount points, and configuring the file systems.
-
-
 
 ---
 
